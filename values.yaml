@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: public.ecr.aws/lekko/lekko/sidecar
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: "v0.0.16"
 
 imagePullSecrets: []
