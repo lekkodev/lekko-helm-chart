@@ -83,7 +83,7 @@ affinity: {}
 lekko:
   repoURL: ""
   gitSync:
-    enabled: "true"
+    enabled: false
     branch: main
     depth: 1
 
