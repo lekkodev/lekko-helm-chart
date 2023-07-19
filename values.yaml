@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 3
+replicaCount: 1
 
 image:
   repository: public.ecr.aws/lekko/lekko/sidecar
@@ -81,5 +81,9 @@ tolerations: []
 affinity: {}
 
 lekko:
-  backend: default
+  repoURL: ""
+  gitSync:
+    enabled: "true"
+    branch: main
+    depth: 1
 
