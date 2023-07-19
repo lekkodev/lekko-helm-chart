@@ -34,26 +34,88 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
+          {{- if .Values.lekko.gitSync.enabled }}
+            - "--repo-path=/data/lekko"
+          {{- else }}
             - "--repo-url={{ .Values.lekko.repoURL }}"
-            - "--api-key={{ .Values.lekko.apiKey }}"
+          {{- end}}
+            - "--api-key=$(LEKKO_API_KEY)"
+            - "--mode={{ .Values.lekko.gitSync.enabled | ternary "static" "default"}}"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          env:
+            - name: LEKKO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lekko
+                  key: api_key
           livenessProbe:
             failureThreshold: 3
             exec:
-              command: ["bin/grpc-health-probe", "-addr=:50051"]
+              command: ["bin/grpc-health-probe", "-addr=:{{ .Values.service.port }}"]
             initialDelaySeconds: 20
             periodSeconds: 20
           readinessProbe:
             failureThreshold: 3
             exec:
-              command: ["bin/grpc-health-probe", "-addr=:50051"]
+              command: ["bin/grpc-health-probe", "-addr=:{{ .Values.service.port }}"]
             initialDelaySeconds: 20
             periodSeconds: 20
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.lekko.gitSync.enabled }}
+          volumeMounts:
+            - name: lekko-config
+              mountPath: /data
+        - name: lekko-sync
+          image: k8s.gcr.io/git-sync/git-sync:v3.6.2
+          args:
+            - --repo=git@github.com:{{ .Values.lekko.repoURL }}
+            - --branch=main
+            - --depth=1
+            - --root=/data/lekko
+            - --ssh=true
+            - --dest=contents
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+          - name: ssh-key-secret
+            mountPath: /etc/git-secret
+            readOnly: true
+          - name: lekko-config
+            mountPath: /data
+          {{- end }}
+      initContainers:
+      {{- if .Values.lekko.gitSync.enabled }}
+      - name: lekko-boostrap
+        image: k8s.gcr.io/git-sync/git-sync:v3.6.2
+        args:
+          - --repo=git@github.com:{{ .Values.lekko.repoURL }}
+          - --branch=main
+          - --depth=1
+          - --root=/data/lekko
+          - --ssh=true
+          - --one-time
+          - --dest=contents
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: ssh-key-secret
+          mountPath: /etc/git-secret
+          readOnly: true
+        - name: lekko-config
+          mountPath: /data
+      volumes:
+        - name: ssh-key-secret
+          secret:
+            secretName: ssh-key-secret
+            defaultMode: 0400
+        - name: lekko-config
+          emptyDir:
+            sizeLimit: 500Mi
+      {{- end}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
