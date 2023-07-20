@@ -12,7 +12,7 @@ kubectl create secret generic lekko --from-literal=api_key=${LEKKO_API_KEY}
 
 **To run in default mode**
 ```
-helm install lekko --set lekko.repoURL=<owner_name/repo_name> .
+helm install lekko --set lekko.repoURL=<github_org_name/repo_name> .
 ```
 
 **To run in static mode**

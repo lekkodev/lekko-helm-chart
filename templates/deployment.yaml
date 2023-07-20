@@ -89,7 +89,7 @@ spec:
           {{- end }}
       initContainers:
       {{- if .Values.lekko.gitSync.enabled }}
-      - name: lekko-boostrap
+      - name: lekko-bootstrap
         image: k8s.gcr.io/git-sync/git-sync:v3.6.2
         args:
           - --repo=git@github.com:{{ .Values.lekko.repoURL }}
