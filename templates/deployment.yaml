@@ -55,13 +55,13 @@ spec:
             failureThreshold: 3
             exec:
               command: ["bin/grpc-health-probe", "-addr=:{{ .Values.service.port }}"]
-            initialDelaySeconds: 20
+            initialDelaySeconds: 1
             periodSeconds: 20
           readinessProbe:
             failureThreshold: 3
             exec:
               command: ["bin/grpc-health-probe", "-addr=:{{ .Values.service.port }}"]
-            initialDelaySeconds: 20
+            initialDelaySeconds: 1
             periodSeconds: 20
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
